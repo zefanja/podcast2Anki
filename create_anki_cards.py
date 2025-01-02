@@ -18,6 +18,7 @@ RESULTS_FILE = f"{RESULTS_DIR}/flashcard_results.json"
 DETAILED_EPISODES_FILE = f"{RESULTS_DIR}/detailed_episodes.json"
 OUTPUT_FILE = f"{RESULTS_DIR}/anki_flashcards.csv"
 TASKS_FILE = f"{RESULTS_DIR}/batch_tasks.jsonl"
+BATCH_OUTPUT_FILE = f"{RESULTS_DIR}/batch_output.jsonl"
 BATCH_ID = ""
 BATCH_FILE_ID = ""
 
@@ -133,7 +134,7 @@ def poll_batch_status(batch_id):
         print(f"Batch {batch_id} status: {batch.status}... waiting...")
         time.sleep(10)
 
-def download_batch_results(batch_id, output_filename="batch_output.jsonl"):
+def download_batch_results(batch_id, output_filename="BATCH_OUTPUT_FILE"):
     """
     Downloads the results of a completed batch job from OpenAI's Batch API.
 
