@@ -4,11 +4,15 @@ import os
 import json
 import requests
 from faster_whisper import WhisperModel
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Directories for downloads and transcripts
 EPISODE_DIR = "episodes"
 TRANSCRIPT_DIR = "transcripts"
 RESULTS_DIR = "results"
+WHISPER_MODEL = os.getenv("WHISPER_MODEL")
 
 def ensure_directories():
     """
@@ -78,7 +82,7 @@ def process_episodes(filename="detailed_episodes.json"):
     Processes episodes: downloads, transcribes, and updates the JSON file.
     """
     ensure_directories()
-    model = WhisperModel("small", device="cpu")  # Adjust model and device as needed
+    model = WhisperModel(WHISPER_MODEL, device="cpu")  # Adjust model and device as needed
     
     episodes = load_episodes(filename)
     for episode in episodes:

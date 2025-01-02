@@ -10,6 +10,7 @@ import markdown
 import re
 import time
 
+load_dotenv()
 
 # Directories and files
 RESULTS_DIR = "results"
@@ -19,10 +20,11 @@ DETAILED_EPISODES_FILE = f"{RESULTS_DIR}/detailed_episodes.json"
 OUTPUT_FILE = f"{RESULTS_DIR}/anki_flashcards.csv"
 TASKS_FILE = f"{RESULTS_DIR}/batch_tasks.jsonl"
 BATCH_OUTPUT_FILE = f"{RESULTS_DIR}/batch_output.jsonl"
+OPENAI_MODEL = os.getenv("OPENAI_MODEL")
+
 BATCH_ID = ""
 BATCH_FILE_ID = ""
 
-load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def load_transcript(episode_id):
@@ -83,7 +85,7 @@ def create_jsonl_file(transcripts, filename=TASKS_FILE):
                 "method": "POST",
                 "url": "/v1/chat/completions",
                 "body": {
-                    "model": "gpt-4o-mini",
+                    "model": OPENAI_MODEL,
                     "messages": [
                         {"role": "user", "content": f"Summarize the transcript in up to 10 key points. For each point, provide up to 3 full multi-sentence quotes as supporting evidence:\n{transcript}"}
                     ]
@@ -134,7 +136,7 @@ def poll_batch_status(batch_id):
         print(f"Batch {batch_id} status: {batch.status}... waiting...")
         time.sleep(10)
 
-def download_batch_results(batch_id, output_filename="BATCH_OUTPUT_FILE"):
+def download_batch_results(batch_id, output_filename=BATCH_OUTPUT_FILE):
     """
     Downloads the results of a completed batch job from OpenAI's Batch API.
 
