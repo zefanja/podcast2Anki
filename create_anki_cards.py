@@ -20,12 +20,49 @@ DETAILED_EPISODES_FILE = f"{RESULTS_DIR}/detailed_episodes.json"
 OUTPUT_FILE = f"{RESULTS_DIR}/anki_flashcards.csv"
 TASKS_FILE = f"{RESULTS_DIR}/batch_tasks.jsonl"
 BATCH_OUTPUT_FILE = f"{RESULTS_DIR}/batch_output.jsonl"
+BATCH_ID_TMP_FILE = f"{RESULTS_DIR}/last_batch_id"
 OPENAI_MODEL = os.getenv("OPENAI_MODEL")
 
 BATCH_ID = ""
 BATCH_FILE_ID = ""
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+def confirm_continue():
+    """
+    Prompt the user to confirm whether they want to continue.
+    Returns:
+        bool: True if the user confirms, False otherwise.
+    """
+    while True:
+        response = input("Do you want to continue? (yes/no): ").strip().lower()
+        if response in ['yes', 'y']:
+            return True
+        elif response in ['no', 'n']:
+            return False
+        else:
+            print("Invalid input. Please enter 'yes' or 'no'.")
+
+def check_for_tmp_batch_id(file_path=BATCH_ID_TMP_FILE):
+    if not os.path.exists(file_path):
+        return False
+
+    try:
+        with open(file_path, "r") as file:
+            return file.read()
+    except IOError as e:
+        raise IOError(f"An error occurred while reading the file: {e}")
+
+def remove_batch_id_tmp_file(file_path=BATCH_ID_TMP_FILE):
+    try:
+        os.remove(file_path)
+        print(f"{file_path} has been deleted successfully.")
+    except FileNotFoundError:
+        print(f"{file_path} does not exist.")
+    except PermissionError:
+        print(f"Permission denied: Unable to delete {file_path}.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def load_transcript(episode_id):
     """
@@ -119,7 +156,10 @@ def create_batch_request(batch_input_file_id):
             "description": "podcast2anki job"
         }
     )
-    print(batch)
+    # store value temporarly
+    with open(BATCH_ID_TMP_FILE, "w") as file:
+        file.write(batch.id)
+
     return batch.id
 
 def poll_batch_status(batch_id):
@@ -156,6 +196,9 @@ def download_batch_results(batch_id, output_filename=BATCH_OUTPUT_FILE):
         file.write(file_response.text)
 
     print(f"Results saved to {output_filename}")
+
+    # delete temp stored batch id
+    remove_batch_id_tmp_file()
 
     # Parse the JSONL file content
     results = []
@@ -252,6 +295,13 @@ def save_flashcards_to_csv(flashcards, filename=OUTPUT_FILE):
             writer.writerow([flashcard["quote"], flashcard["title"], flashcard["author"], flashcard["date"]])
     print(f"Flashcards saved to {filename}")
 
+def create_new_batch():
+    create_jsonl_file(new_transcripts)
+    file_id = upload_jsonl_file(TASKS_FILE)
+    batch_id = create_batch_request(file_id)
+
+    return batch_id
+
 def main():
     """
     Main function to generate flashcards for multiple episodes.
@@ -279,38 +329,43 @@ def main():
     # Generate flashcards for new transcripts
     if new_transcripts:
         print(f"Generating flashcards for {len(new_transcripts)} new episodes...")
-        file_id = BATCH_FILE_ID
-        batch_id = BATCH_ID
+        # file_id = BATCH_FILE_ID
+        # batch_id = BATCH_ID
         # if not BATCH_FILE_ID:
         #     create_jsonl_file(new_transcripts)
         #     file_id = upload_jsonl_file(TASKS_FILE)
         # if not BATCH_ID:
         #     batch_id = create_batch_request(file_id)
 
-        create_jsonl_file(new_transcripts)
-        file_id = upload_jsonl_file(TASKS_FILE)
-        batch_id = create_batch_request(file_id)
-        output_file_id = poll_batch_status(batch_id)
-        output_filename = download_batch_results(output_file_id)
-        ai_results = process_batch_results(output_filename)
-        results.update(ai_results)
-        save_results(results)
+        if confirm_continue():
+            print("Continuing...")
+            batch_id = check_for_tmp_batch_id()
 
-    # Create Anki flashcards
-    flashcards = []
-    for episode in episode_metadata:
-        episode_id = episode["episode_id"]
-        if episode_id in results:
-            print(episode_id)
-            for item in results[episode_id]:
-                flashcards.append(create_flashcards_for_episode(
-                    episode_id=episode_id,
-                    metadata=episode,
-                    ai_result=item
-                ))
+            if not batch_id:
+                batch_id = create_new_batch()
 
-    # Save flashcards to CSV
-    save_flashcards_to_csv(flashcards)
+            output_file_id = poll_batch_status(batch_id)
+            output_filename = download_batch_results(output_file_id)
+            ai_results = process_batch_results(output_filename)
+            results.update(ai_results)
+            save_results(results)
+
+            # Create Anki flashcards
+            flashcards = []
+            for episode in episode_metadata:
+                episode_id = episode["episode_id"]
+                if episode_id in results:
+                    for item in results[episode_id]:
+                        flashcards.append(create_flashcards_for_episode(
+                            episode_id=episode_id,
+                            metadata=episode,
+                            ai_result=item
+                        ))
+
+            # Save flashcards to CSV
+            save_flashcards_to_csv(flashcards)
+        else:
+            print("Exiting...")
 
 if __name__ == "__main__":
     main()
