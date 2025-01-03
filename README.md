@@ -35,3 +35,6 @@ python3 create_anki_cards.py
 ```
 
 4. Import the `results/anki-flashcards.csv` file in Anki
+
+# License
+GPLv3

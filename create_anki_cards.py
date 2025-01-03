@@ -26,9 +26,6 @@ PROMPT = os.getenv("PROMPT")
 if not PROMPT:
     PROMPT = "Summarize the transcript in up to 10 key points. For each point, provide up to 3 full multi-sentence quotes as supporting evidence:"
 
-BATCH_ID = ""
-BATCH_FILE_ID = ""
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def confirm_continue():
@@ -332,13 +329,6 @@ def main():
     # Generate flashcards for new transcripts
     if new_transcripts:
         print(f"Generating flashcards for {len(new_transcripts)} new episodes...")
-        # file_id = BATCH_FILE_ID
-        # batch_id = BATCH_ID
-        # if not BATCH_FILE_ID:
-        #     create_jsonl_file(new_transcripts)
-        #     file_id = upload_jsonl_file(TASKS_FILE)
-        # if not BATCH_ID:
-        #     batch_id = create_batch_request(file_id)
 
         if confirm_continue():
             print("Continuing...")
