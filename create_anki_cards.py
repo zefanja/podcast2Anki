@@ -172,8 +172,9 @@ def poll_batch_status(batch_id):
             print(batch.output_file_id)
             return batch.output_file_id
         elif batch.status in {"failed", "cancelled"}:
+            remove_batch_id_tmp_file()
             raise RuntimeError(f"Batch {batch_id} failed with status: {batch.status}")
-        print(f"Batch {batch_id} status: {batch.status}... waiting...")
+        print(f"Batch {batch_id} status: {batch.status}... waiting... (completed {batch.request_counts.completed} of {batch.request_counts.total})")
         time.sleep(10)
 
 def download_batch_results(batch_id, output_filename=BATCH_OUTPUT_FILE):
