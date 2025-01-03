@@ -1,6 +1,6 @@
 # Podcast2Anki
 
-Generate flashcards for Anki from your podcasts
+Generate flashcards for Anki from your podcasts! You have to sync your podcasts to gpodder or a compatible server first (e.g. [oPodSync](https://github.com/kd2org/opodsync)).
 
 # Installation
 
