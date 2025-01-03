@@ -22,6 +22,9 @@ TASKS_FILE = f"{RESULTS_DIR}/batch_tasks.jsonl"
 BATCH_OUTPUT_FILE = f"{RESULTS_DIR}/batch_output.jsonl"
 BATCH_ID_TMP_FILE = f"{RESULTS_DIR}/last_batch_id"
 OPENAI_MODEL = os.getenv("OPENAI_MODEL")
+PROMPT = os.getenv("PROMPT")
+if not PROMPT:
+    PROMPT = "Summarize the transcript in up to 10 key points. For each point, provide up to 3 full multi-sentence quotes as supporting evidence:"
 
 BATCH_ID = ""
 BATCH_FILE_ID = ""
@@ -124,7 +127,7 @@ def create_jsonl_file(transcripts, filename=TASKS_FILE):
                 "body": {
                     "model": OPENAI_MODEL,
                     "messages": [
-                        {"role": "user", "content": f"Summarize the transcript in up to 10 key points. For each point, provide up to 3 full multi-sentence quotes as supporting evidence:\n{transcript}"}
+                        {"role": "user", "content": f"{PROMPT}\n{transcript}"}
                     ]
                 }
             }
