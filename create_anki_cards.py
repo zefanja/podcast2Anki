@@ -298,7 +298,7 @@ def save_flashcards_to_csv(flashcards, filename=OUTPUT_FILE):
             writer.writerow([flashcard["quote"], flashcard["title"], flashcard["author"], flashcard["date"]])
     print(f"Flashcards saved to {filename}")
 
-def create_new_batch():
+def create_new_batch(new_transcripts):
     create_jsonl_file(new_transcripts)
     file_id = upload_jsonl_file(TASKS_FILE)
     batch_id = create_batch_request(file_id)
@@ -345,7 +345,7 @@ def main():
             batch_id = check_for_tmp_batch_id()
 
             if not batch_id:
-                batch_id = create_new_batch()
+                batch_id = create_new_batch(new_transcripts)
 
             output_file_id = poll_batch_status(batch_id)
             output_filename = download_batch_results(output_file_id)
