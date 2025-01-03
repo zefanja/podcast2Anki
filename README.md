@@ -8,7 +8,7 @@ Generate flashcards for Anki from your podcasts
 * Install [faster-whipser](https://github.com/SYSTRAN/faster-whisper)
 * Create an `.env` file:
 ```
-API_BASE_URL = "your-gpodder-podcast-server"
+API_BASE_URL = "your-gpodder-podcast-server.org/api/2/"
 USERNAME = "user"
 PASSWORD = "password"
 OPENAI_API_KEY = "open-ai-api-key"
