@@ -18,10 +18,30 @@ PASSWORD = os.getenv("PASSWORD")
 
 RESULTS_DIR = "results"
 DETAILED_EPISODES_FILE = f"{RESULTS_DIR}/detailed_episodes.json"
+TIMESTAMP_FILE = f"{RESULTS_DIR}/last_timestamp.txt"
 
 
 # Cache for podcast details
 podcast_cache = {}
+
+def get_last_timestamp():
+    """Reads the last saved timestamp from the file."""
+    try:
+        with open(TIMESTAMP_FILE, "r") as file:
+            return int(file.read().strip())
+    except FileNotFoundError:
+        return None
+    except Exception as e:
+        print(f"Error reading timestamp file: {e}")
+        return None
+
+def save_last_timestamp(timestamp):
+    """Saves the timestamp to a file."""
+    try:
+        with open(TIMESTAMP_FILE, "w") as file:
+            file.write(str(timestamp))
+    except Exception as e:
+        print(f"Error saving timestamp: {e}")
 
 def get_episode_actions(since=None, podcast=None, device=None, aggregated=False):
     """
@@ -42,8 +62,12 @@ def get_episode_actions(since=None, podcast=None, device=None, aggregated=False)
     if response.status_code != 200:
         raise Exception(f"Failed to fetch episode actions: {response.status_code} {response.text}")
     
-    return response.json()
-    
+    data = response.json()
+    # Save the last timestamp from the response
+    if "timestamp" in data:
+        save_last_timestamp(data["timestamp"])
+    return data
+
 def fetch_episode_details(podcast_url, episode_id):
     """
     Fetches the specific episode from the podcast feed and returns its title and author.
@@ -173,26 +197,34 @@ def remove_duplicates_from_json(data, key="episode_id"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fetch and manage podcast episode data.")
     parser.add_argument(
-        "-u", "--update",
+        "-l", "--local",
         action="store_true",
-        help="Force update and fetch new data instead of loading from the file"
+        help="Load from local file instead of downloading."
+    )
+    parser.add_argument(
+        "-a", "--all",
+        action="store_true",
+        help="Download all episodes (normally it downloads only new ones)"
     )
     args = parser.parse_args()
 
+    if args.all:
+        since = None
+    else:
+        since = get_last_timestamp()
+
     try:
-        detailed_episodes = load_episodes_from_json()
-        detailed_episodes = remove_duplicates_from_json(detailed_episodes)
-        
-        if not detailed_episodes or args.update:
-            print("No fully listened episodes found. Will try to download some...")
-            # Example: Fetch all fully listened episodes with details (since=None for the first request)
-            detailed_episodes = get_fully_listened_episodes_with_details()
-            # Save episodes to a JSON file
-            save_episodes_to_json(remove_duplicates_from_json(detailed_episodes))
-        else:
+        if args.local:
+            print("Loading downloaded episodes...")
+            detailed_episodes = load_episodes_from_json()
+            detailed_episodes = remove_duplicates_from_json(detailed_episodes)
             print("Fully listened episodes with details:")
             for episode in detailed_episodes:
                 print(episode)
+        else:
+            print("Downloading episodes...")
+            detailed_episodes = get_fully_listened_episodes_with_details(since=since)
+            save_episodes_to_json(remove_duplicates_from_json(detailed_episodes))
 
     except Exception as e:
         print(f"Error: {e}")

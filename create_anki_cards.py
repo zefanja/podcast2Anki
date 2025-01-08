@@ -106,7 +106,7 @@ def check_missing_results(episode_metadata, results):
     Checks for missing results by comparing episode metadata and AI results.
     Returns a list of missing episode IDs.
     """
-    all_episode_ids = {episode["episode_id"] for episode in episode_metadata}
+    all_episode_ids = {episode["episode_id"].replace("/","_") for episode in episode_metadata}
     completed_episode_ids = set(results.keys())
     missing_episode_ids = all_episode_ids - completed_episode_ids
     return list(missing_episode_ids)
