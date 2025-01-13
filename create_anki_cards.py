@@ -166,6 +166,8 @@ def poll_batch_status(batch_id):
     """
     Polls the status of a batch request until it is complete.
     """
+    print("Checking Batch (can take up to 24h)...")
+    print("You can cancel with Ctrl+C and check again later.")
     while True:
         batch = client.batches.retrieve(batch_id)
         if batch.status == "completed":
@@ -322,10 +324,11 @@ def main():
 
     # Load transcripts for processing
     for episode in episode_metadata:
-        if episode["episode_id"] in missing_episode_ids:
-            transcript = load_transcript(episode["episode_id"])
+        episode_id = episode["episode_id"].replace("/","_")
+        if episode_id in missing_episode_ids:
+            transcript = load_transcript(episode_id)
             if transcript:
-                new_transcripts[episode["episode_id"]] = transcript
+                new_transcripts[episode_id] = transcript
 
     # Generate flashcards for new transcripts
     if new_transcripts:

@@ -133,7 +133,7 @@ def get_fully_listened_episodes_with_details(since=None):
                     "podcast_title": podcast_title,
                     "podcast_author": episode_author,
                     "episode_title": episode_title,
-                    "episode_id": episode_id,
+                    "episode_id": episode_id.replace("/","_"),
                     "episode_url": episode_url,
                     "date": date_formatted
                 })
